@@ -1,0 +1,61 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# configs/50m.yaml
+#
+# PURPOSE: Full training run targeting ~36-38 M parameters.
+# Pretrained on 100–200 M tokens from FineWeb-Edu.
+#
+# Architecture (Option A from the implementation plan):
+#   embedding_dim = 512, num_heads = 8, num_layers = 6
+#
+# Approximate parameter count (calculated in src/model/gpt.py):
+#   Token embedding:    16384 × 512  =  8,388,608
+#   Position embedding:   256 × 512  =    131,072
+#   × 6 Transformer blocks            = 18,914,304
+#     (each block: QKV proj + out proj + FFN + 2× LayerNorm)
+#   Final LayerNorm:                  =      1,024
+#   LM Head (NOT tied):   16384×512  =  8,388,608
+#   ─────────────────────────────────────────────
+#   Total (no weight tying):         ≈ 35,823,616  (~36 M)
+#
+# If weight_tying = true, the LM head reuses the embedding matrix,
+# saving 8.4 M parameters → ~27 M total.
+# We keep weight_tying = false to stay in the 30-50 M target range.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Model architecture ────────────────────────────────────────────────────────
+model:
+  vocab_size: 16384
+  context_length: 256
+  embedding_dim: 512
+  num_layers: 6
+  num_heads: 8
+  ffn_multiplier: 4
+  dropout: 0.1             # Regularization for longer training runs
+  weight_tying: false      # Keep LM head separate → ~36 M total params
+
+# ── Training ──────────────────────────────────────────────────────────────────
+training:
+  batch_size: 32
+  gradient_accumulation_steps: 4   # Effective batch = 32 * 4 = 128
+  max_steps: 10000                 # Adjust based on available tokens
+  eval_interval: 500
+  save_interval: 1000
+  log_interval: 50
+
+  learning_rate: 3.0e-4
+  weight_decay: 0.1
+  beta1: 0.9
+  beta2: 0.95
+  grad_clip: 1.0
+
+  warmup_steps: 500        # ~5% of max_steps as warmup
+  min_lr: 3.0e-5           # Final LR at end of cosine schedule
+
+  use_amp: true            # REQUIRED for efficient GPU training
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+paths:
+  tokenizer_dir: "artifacts/tokenizer"
+  data_dir: "data/processed/50m"
+  checkpoint_dir: "checkpoints/50m"
+  log_dir: "experiments/logs/50m"

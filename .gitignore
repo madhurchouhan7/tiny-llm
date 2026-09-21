@@ -1,0 +1,47 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# .gitignore for Tiny-LLM-From-Scratch
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# ─── Data & model artefacts (too large for git) ───────────────────────────
+# Raw and tokenized dataset files (can be gigabytes)
+data/
+
+# Saved tokenizer files (can be regenerated with scripts/train_tokenizer.py)
+artifacts/tokenizer/*.json
+artifacts/tokenizer/*.txt
+
+# Model checkpoints (can be hundreds of MB each)
+checkpoints/*.pt
+checkpoints/*.pth
+
+# ─── Experiment outputs ───────────────────────────────────────────────────
+# Keep the directory structure, ignore the actual log/generation files
+experiments/logs/*.jsonl
+experiments/logs/*.csv
+experiments/generated/*.txt
+
+# ─── OS / IDE junk ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ─── Environment variables (never commit secrets) ─────────────────────────
+.env
+*.env

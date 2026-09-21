@@ -1,0 +1,51 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# configs/debug.yaml
+#
+# PURPOSE: Fastest possible configuration for local CPU testing.
+# Use this when you just want to verify that the code RUNS without errors,
+# not to produce a meaningful model.
+#
+# Model is intentionally tiny (2 layers, dim=64) so a single forward pass
+# completes in milliseconds on CPU.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Model architecture ────────────────────────────────────────────────────────
+model:
+  vocab_size: 256          # Tiny vocab (byte-level) so tokenizer is trivial
+  context_length: 32       # Short sequences → small attention matrices
+  embedding_dim: 64        # Width of every hidden layer
+  num_layers: 2            # Number of stacked Transformer blocks
+  num_heads: 2             # Number of attention heads (64 / 2 = 32 dim per head)
+  ffn_multiplier: 4        # FFN hidden dim = embedding_dim * ffn_multiplier = 256
+  dropout: 0.0             # No dropout during debug (makes gradients cleaner)
+  weight_tying: false      # Don't tie LM head to embedding (simpler for debugging)
+
+# ── Training ──────────────────────────────────────────────────────────────────
+training:
+  batch_size: 4
+  gradient_accumulation_steps: 1  # Update weights every step (no accumulation)
+  max_steps: 100                  # Stop after 100 gradient steps
+  eval_interval: 20               # Run validation every 20 steps
+  save_interval: 50               # Save checkpoint every 50 steps
+  log_interval: 10                # Print training stats every 10 steps
+
+  # AdamW optimizer
+  learning_rate: 3.0e-4
+  weight_decay: 0.1
+  beta1: 0.9
+  beta2: 0.95
+  grad_clip: 1.0
+
+  # Learning rate schedule: linear warmup → cosine decay
+  warmup_steps: 10
+  min_lr: 3.0e-5            # LR never drops below this (= 10% of peak LR)
+
+  # Mixed precision: only works on CUDA; ignored on CPU
+  use_amp: false
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+paths:
+  tokenizer_dir: "artifacts/tokenizer"
+  data_dir: "data/processed/debug"
+  checkpoint_dir: "checkpoints/debug"
+  log_dir: "experiments/logs/debug"

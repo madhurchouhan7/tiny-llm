@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Tiny-LLM-From-Scratch — Python dependencies
+#
+# Install with:
+#   pip install -r requirements.txt
+#
+# Tested on Python 3.11+
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Deep learning framework — everything model-related runs on PyTorch
+torch>=2.2.0
+
+# HuggingFace datasets — streaming access to FineWeb-Edu without loading
+# the entire dataset into RAM
+datasets>=2.18.0
+huggingface_hub>=0.21.0
+
+# HuggingFace tokenizers — fast Rust-backed library for TRAINING a BPE
+# tokenizer from scratch on our own corpus.
+# NOTE: We intentionally use 'tokenizers' (not 'tiktoken') because tiktoken
+# only supports inference with pre-built vocabularies; 'tokenizers' lets us
+# train a brand-new vocabulary.
+tokenizers>=0.19.0
+
+# Numerical computing — used for memory-mapped binary dataset files (.bin)
+numpy>=1.26.0
+
+# Progress bars — makes long loops (tokenization, training) human-readable
+tqdm>=4.66.0
+
+# YAML config loading — we store model + training hyperparameters in .yaml files
+pyyaml>=6.0
+
+# Rich terminal output — pretty-printed tables and logs during training
+rich>=13.7.0
+
+# Arrow columnar format — dependency of datasets, listed explicitly for clarity
+pyarrow>=15.0.0
+
+# Optional: matplotlib for plotting training curves after the run
+matplotlib>=3.8.0

@@ -1,0 +1,50 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# configs/tiny.yaml
+#
+# PURPOSE: Full-sized architecture but trained on a small data slice
+# (1–5 M tokens). Use this to:
+#   1. Verify the end-to-end pipeline works (data → train → checkpoint → generate)
+#   2. Confirm loss decreases over time
+#   3. Check that the model can be resumed from a checkpoint
+#
+# This config uses the same model dimensions as 50m.yaml so results are
+# comparable — only the number of training steps differs.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Model architecture ────────────────────────────────────────────────────────
+model:
+  vocab_size: 16384        # BPE vocabulary size (14-bit vocab)
+  context_length: 256      # Max tokens the model sees at once
+  embedding_dim: 512       # Width of every hidden vector (Option A)
+  num_layers: 6            # Number of stacked Transformer blocks
+  num_heads: 8             # Attention heads (512 / 8 = 64 dim per head ✓)
+  ffn_multiplier: 4        # FFN hidden = 512 * 4 = 2048
+  dropout: 0.0             # 0.0 for small runs (easier to overfit, good for validation)
+  weight_tying: true       # Share token embedding and LM head weights (GPT-2 style)
+
+# ── Training ──────────────────────────────────────────────────────────────────
+training:
+  batch_size: 16
+  gradient_accumulation_steps: 2   # Effective batch = 16 * 2 = 32
+  max_steps: 1000
+  eval_interval: 100
+  save_interval: 250
+  log_interval: 25
+
+  learning_rate: 3.0e-4
+  weight_decay: 0.1
+  beta1: 0.9
+  beta2: 0.95
+  grad_clip: 1.0
+
+  warmup_steps: 100
+  min_lr: 3.0e-5
+
+  use_amp: true    # Enable FP16 on CUDA; gracefully falls back to FP32 on CPU
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+paths:
+  tokenizer_dir: "artifacts/tokenizer"
+  data_dir: "data/processed/tiny"
+  checkpoint_dir: "checkpoints/tiny"
+  log_dir: "experiments/logs/tiny"
