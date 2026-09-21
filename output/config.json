@@ -1,0 +1,10 @@
+{
+  "vocab_size": 16384,
+  "context_length": 256,
+  "embedding_dim": 640,
+  "num_layers": 6,
+  "num_heads": 10,
+  "ffn_multiplier": 4,
+  "dropout": 0.1,
+  "weight_tying": false
+}

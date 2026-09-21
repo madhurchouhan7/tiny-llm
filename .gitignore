@@ -45,3 +45,6 @@ Thumbs.db
 # ─── Environment variables (never commit secrets) ─────────────────────────
 .env
 *.env
+
+*.pt
+*.bin

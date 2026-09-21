@@ -1,0 +1,7 @@
+{
+  "vocab_size": 16384,
+  "endoftext_id": 0,
+  "pad_id": 1,
+  "endoftext_token": "<|endoftext|>",
+  "pad_token": "<|pad|>"
+}
