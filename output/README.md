@@ -62,8 +62,8 @@ from huggingface_hub import hf_hub_download
 import torch, json
 
 # Download files
-config_path = hf_hub_download(repo_id="tiny-llm-50m", filename="config.json")
-weights_path = hf_hub_download(repo_id="tiny-llm-50m", filename="pytorch_model.bin")
+config_path = hf_hub_download(repo_id="cannizaroo/tiny-llm-50m", filename="config.json")
+weights_path = hf_hub_download(repo_id="cannizaroo/tiny-llm-50m", filename="pytorch_model.bin")
 
 # Rebuild model (copy GPTConfig and GPT classes from the training notebook)
 with open(config_path) as f:
