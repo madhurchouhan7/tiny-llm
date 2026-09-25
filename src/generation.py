@@ -123,6 +123,121 @@ def generate(
 
     return idx
 
+@torch.no_grad()
+def generate_stream(
+    model: GPT,
+    idx: torch.Tensor,
+    tokenizer: BPETokenizer,
+    max_new_tokens: int = 100,
+    temperature: float = 0.8,
+    top_k: Optional[int] = 50,
+    top_p: Optional[float] = 0.9,
+    eos_id: Optional[int] = None,
+):
+    """
+    Generate tokens autoregressively and yield each decoded token
+    immediately as it is generated.
+    """
+    model.eval()
+    context_length = model.config.context_length
+
+    generated_ids = []
+    previous_text = ""
+
+    for _ in range(max_new_tokens):
+
+        # Keep only the model's context window
+        idx_cond = (
+            idx if idx.size(1) <= context_length
+            else idx[:, -context_length:]
+        )
+
+        # Forward pass
+        logits, _ = model(idx_cond)
+
+        # Last token only
+        logits = logits[:, -1, :]
+
+        # Greedy decoding
+        if temperature == 0.0:
+            next_token = torch.argmax(
+                logits,
+                dim=-1,
+                keepdim=True
+            )
+
+        else:
+            logits = logits / temperature
+
+            # Top-K
+            if top_k is not None and top_k > 0:
+                v, _ = torch.topk(
+                    logits,
+                    min(top_k, logits.size(-1))
+                )
+                logits[logits < v[:, [-1]]] = -float("Inf")
+
+            # Top-P
+            if top_p is not None and 0.0 < top_p < 1.0:
+                sorted_logits, sorted_indices = torch.sort(
+                    logits,
+                    descending=True
+                )
+
+                cumulative_probs = torch.cumsum(
+                    F.softmax(sorted_logits, dim=-1),
+                    dim=-1
+                )
+
+                sorted_indices_to_remove = cumulative_probs > top_p
+
+                sorted_indices_to_remove[..., 1:] = (
+                    sorted_indices_to_remove[..., :-1].clone()
+                )
+
+                sorted_indices_to_remove[..., 0] = 0
+
+                indices_to_remove = sorted_indices_to_remove.scatter(
+                    1,
+                    sorted_indices,
+                    sorted_indices_to_remove
+                )
+
+                logits[indices_to_remove] = -float("Inf")
+
+            # Sample
+            probs = F.softmax(logits, dim=-1)
+
+            next_token = torch.multinomial(
+                probs,
+                num_samples=1
+            )
+
+        # Add token to sequence
+        idx = torch.cat((idx, next_token), dim=1)
+
+        next_id = next_token.item()
+        generated_ids.append(next_id)
+
+        # Decode the generated sequence so far
+        current_text = tokenizer.decode(generated_ids)
+        
+        # If the text ends with the replacement character (), a UTF-8 multi-byte
+        # character is currently incomplete. Wait for the next token to complete it.
+        if not current_text.endswith(""):
+            new_text = current_text[len(previous_text):]
+            previous_text = current_text
+            yield new_text
+
+        # EOS
+        if eos_id is not None and next_id == eos_id:
+            break
+
+    # Yield any remaining text if we stopped on an incomplete character
+    current_text = tokenizer.decode(generated_ids)
+    if len(current_text) > len(previous_text):
+        yield current_text[len(previous_text):]
+
 
 def generate_text(
     model: GPT,
